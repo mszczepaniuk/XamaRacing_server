@@ -1,17 +1,15 @@
 ﻿using Infrastructure.Data.Entities;
 using System;
 using System.Collections.Generic;
-using System.Text;
+using System.Linq;
+using System.Threading.Tasks;
 
-namespace Infrastructure.Data.Entities
+namespace API.BindingModels
 {
-    class Race
+    public class RaceMapBindingModel
     {
-        public int Id { get; set; }
         public string Name { get; set; }
-        // TODO: public AppliactionUser Creator { get; set; }
         public int CreatorId { get; set; }
-        public DateTime CreationDate { get; set; }
         public IList<RaceCheckpoint> RaceCheckpoints { get; set; }
     }
 }
