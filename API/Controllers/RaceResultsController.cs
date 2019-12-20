@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Infrastructure.Data;
 using Infrastructure.Data.Entities;
+using API.BindingModels;
 
 namespace API.Controllers
 {
@@ -14,25 +15,36 @@ namespace API.Controllers
     [ApiController]
     public class RaceResultsController : ControllerBase
     {
-        private readonly AppDbContext _context;
+        private readonly AppDbContext appDbContext;
 
-        public RaceResultsController(AppDbContext context)
+        public RaceResultsController(AppDbContext appDbContext)
         {
-            _context = context;
+            this.appDbContext = appDbContext;
         }
 
-        // GET: api/RaceResults
+        // GET: v1/RaceResults
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<RaceResult>>> GetRaceResults()
+        public async Task<ActionResult<IEnumerable<RaceResult>>> GetRaceResults(int? offset, int? count, int? mapId, string userName)
         {
-            return await _context.RaceResults.ToListAsync();
+            IQueryable<RaceResult> query = appDbContext.RaceResults;
+            offset ??= 0;
+            if (count == null || count > 30) { count = 30; }
+            if (mapId != null) { query = query.Where(x => x.RaceId == mapId); }
+
+            // TODO: Add user filtering
+            var raceResults = await query.OrderBy(x => x.Time)
+                .Skip(offset.Value)
+                .Take(count.Value)
+                .ToArrayAsync();
+
+            return raceResults;
         }
 
-        // GET: api/RaceResults/5
+        // GET: v1/RaceResults/5
         [HttpGet("{id}")]
         public async Task<ActionResult<RaceResult>> GetRaceResult(int id)
         {
-            var raceResult = await _context.RaceResults.FindAsync(id);
+            var raceResult = await appDbContext.RaceResults.FindAsync(id);
 
             if (raceResult == null)
             {
@@ -43,32 +55,39 @@ namespace API.Controllers
         }
 
 
-        // POST: api/RaceResults
+        // POST: v1/RaceResults
         // To protect from overposting attacks, please enable the specific properties you want to bind to, for
         // more details see https://aka.ms/RazorPagesCRUD.
         [HttpPost]
-        public async Task<ActionResult<RaceResult>> PostRaceResult(RaceResult raceResult)
+        public async Task<ActionResult<RaceResult>> PostRaceResult(RaceResultBindingModel raceResultBindingModel)
         {
-            _context.RaceResults.Add(raceResult);
-            await _context.SaveChangesAsync();
+            var raceResult = new RaceResult
+            {
+                RaceId = raceResultBindingModel.RaceId,
+                UserId = raceResultBindingModel.UserId,
+                Time = raceResultBindingModel.Time,
+                CreatedDate = DateTime.Now
+            };
+            appDbContext.RaceResults.Add(raceResult);
+            await appDbContext.SaveChangesAsync();
 
             return CreatedAtAction("GetRaceResult", new { id = raceResult.Id }, raceResult);
         }
 
-        // DELETE: api/RaceResults/5
+        // DELETE: v1/RaceResults/5
         [HttpDelete("{id}")]
         public async Task<ActionResult<RaceResult>> DeleteRaceResult(int id)
         {
-            var raceResult = await _context.RaceResults.FindAsync(id);
+            var raceResult = await appDbContext.RaceResults.FindAsync(id);
             if (raceResult == null)
             {
                 return NotFound();
             }
 
-            _context.RaceResults.Remove(raceResult);
-            await _context.SaveChangesAsync();
+            appDbContext.RaceResults.Remove(raceResult);
+            await appDbContext.SaveChangesAsync();
 
-            return raceResult;
+            return Ok();
         }
     }
 }

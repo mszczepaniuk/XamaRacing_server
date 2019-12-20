@@ -22,7 +22,7 @@ namespace API.Controllers
             this.appDbContext = appDbContext;
         }
 
-        // GET: api/RaceMaps
+        // GET: v1/RaceMaps
         [HttpGet]
         public async Task<ActionResult<IEnumerable<RaceMap>>> GetRaceMaps(int? offset, int? count)
         {
@@ -37,7 +37,7 @@ namespace API.Controllers
             return raceMaps;
         }
 
-        // GET: api/RaceMaps/1/RaceResults
+        // GET: v1/RaceMaps/1/RaceResults
         [HttpGet("{id}/RaceResults")]
         public async Task<ActionResult<IEnumerable<RaceResult>>> GetRaceMapsResults(int id, int? offset, int? count)
         {
@@ -45,7 +45,7 @@ namespace API.Controllers
             if (count == null || count > 30) { count = 30; }
             //TODO: Get userName instead of userId
             var raceResults = await appDbContext.RaceResults.Where(x => x.RaceId == id)
-                .OrderByDescending(x => x.TimeInSeconds)
+                .OrderByDescending(x => x.Time)
                 .Include(x => x.UserId)
                 .Skip(offset.Value)
                 .Take(count.Value)
@@ -53,7 +53,7 @@ namespace API.Controllers
             return raceResults;
         }
 
-        // GET: api/RaceMaps/5
+        // GET: v1/RaceMaps/5
         [HttpGet("{id}")]
         public async Task<ActionResult<RaceMap>> GetRaceMap(int id)
         {
@@ -69,7 +69,7 @@ namespace API.Controllers
             return raceMap;
         }
 
-        // PUT: api/RaceMaps/5
+        // PUT: v1/RaceMaps/5
         // To protect from overposting attacks, please enable the specific properties you want to bind to, for
         // more details see https://aka.ms/RazorPagesCRUD.
         [HttpPut("{id}")]
@@ -97,7 +97,7 @@ namespace API.Controllers
             return raceMap;
         }
 
-        // POST: api/RaceMaps
+        // POST: v1/RaceMaps
         // To protect from overposting attacks, please enable the specific properties you want to bind to, for
         // more details see https://aka.ms/RazorPagesCRUD.
         [HttpPost]
@@ -117,7 +117,7 @@ namespace API.Controllers
             return CreatedAtAction("GetRaceMap", new { id = raceMap.Id }, raceMap);
         }
 
-        // DELETE: api/RaceMaps/5
+        // DELETE: v1/RaceMaps/5
         [HttpDelete("{id}")]
         public async Task<ActionResult<RaceMap>> DeleteRaceMap(int id)
         {
@@ -130,7 +130,7 @@ namespace API.Controllers
             appDbContext.RaceMaps.Remove(raceMap);
             await appDbContext.SaveChangesAsync();
 
-            return raceMap;
+            return Ok();
         }
     }
 }
