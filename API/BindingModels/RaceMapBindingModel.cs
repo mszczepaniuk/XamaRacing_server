@@ -9,7 +9,7 @@ namespace API.BindingModels
     public class RaceMapBindingModel
     {
         public string Name { get; set; }
-        public int CreatorId { get; set; }
+        public string Description { get; set; }
         public IList<RaceCheckpoint> RaceCheckpoints { get; set; }
     }
 }

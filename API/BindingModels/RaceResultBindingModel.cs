@@ -7,7 +7,7 @@ namespace API.BindingModels
 {
     public class RaceResultBindingModel
     {
-        public int UserId { get; set; }
+        public string Nickname { get; set; }
         public int RaceId { get; set; }
         public TimeSpan Time { get; set; }
     }

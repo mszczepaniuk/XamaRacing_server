@@ -43,10 +43,9 @@ namespace API.Controllers
         {
             offset ??= 0;
             if (count == null || count > 30) { count = 30; }
-            //TODO: Get userName instead of userId
+
             var raceResults = await appDbContext.RaceResults.Where(x => x.RaceId == id)
                 .OrderByDescending(x => x.Time)
-                .Include(x => x.UserId)
                 .Skip(offset.Value)
                 .Take(count.Value)
                 .ToArrayAsync();
@@ -81,7 +80,8 @@ namespace API.Controllers
 
             if (raceMap == null) { return NotFound(); }
             raceMap.Name = raceMapBindingModel.Name;
-            raceMap.CreatorId = raceMapBindingModel.CreatorId;
+            raceMap.Description = raceMapBindingModel.Description;
+
             if (raceMap.RaceCheckpoints != raceMapBindingModel.RaceCheckpoints)
             {
                 foreach (var checkpoint in raceMap.RaceCheckpoints)
@@ -107,7 +107,7 @@ namespace API.Controllers
             var raceMap = new RaceMap
             {
                 Name = raceMapBindingModel.Name,
-                CreatorId = raceMapBindingModel.CreatorId,
+                Description = raceMapBindingModel.Description,
                 RaceCheckpoints = raceMapBindingModel.RaceCheckpoints,
                 CreatedDate = createdDate,
                 UpdatedDate = createdDate
@@ -116,6 +116,7 @@ namespace API.Controllers
             await appDbContext.SaveChangesAsync();
             return CreatedAtAction("GetRaceMap", new { id = raceMap.Id }, raceMap);
         }
+
 
         // DELETE: v1/RaceMaps/5
         [HttpDelete("{id}")]
