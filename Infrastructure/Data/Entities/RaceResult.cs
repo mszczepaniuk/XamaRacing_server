@@ -9,11 +9,10 @@ namespace Infrastructure.Data.Entities
     public class RaceResult
     {
         public int Id { get; set; }
-        public int UserId { get; set; }
-        // TODO: public AppliactionUser User { get; set; }
         public int RaceId { get; set; }
         [JsonIgnore]
         public RaceMap Race { get; set; }
+        public string Nickname { get; set; }
         public TimeSpan Time { get; set; }
         public DateTime CreatedDate { get; set; }
     }

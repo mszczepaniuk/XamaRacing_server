@@ -10,8 +10,8 @@ namespace Infrastructure.Data.Entities
     {
         public int Id { get; set; }
         public string Name { get; set; }
-        // TODO: public AppliactionUser Creator { get; set; }
-        public int CreatorId { get; set; }
+        public string Description { get; set; }
+        public int Score { get; set; }
         public DateTime CreatedDate { get; set; }
         public DateTime UpdatedDate { get; set; }
         public IList<RaceCheckpoint> RaceCheckpoints { get; set; }
