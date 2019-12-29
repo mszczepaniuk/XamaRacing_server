@@ -7,10 +7,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "API", "API\API.csproj", "{F
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Infrastructure", "Infrastructure\Infrastructure.csproj", "{6F2D95AA-9CF7-4453-9D36-E425DC5AB384}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{C0B14645-B036-4776-BB8D-26F5759BE3B8}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IntegrationTests", "IntegrationTests\IntegrationTests.csproj", "{88757347-1CAD-4B53-8EAC-A4EFB667C57E}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{0972311A-9A40-4E81-AC85-0DF311E8B4FD}"
 EndProject
 Global
@@ -27,10 +23,6 @@ Global
 		{6F2D95AA-9CF7-4453-9D36-E425DC5AB384}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6F2D95AA-9CF7-4453-9D36-E425DC5AB384}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6F2D95AA-9CF7-4453-9D36-E425DC5AB384}.Release|Any CPU.Build.0 = Release|Any CPU
-		{88757347-1CAD-4B53-8EAC-A4EFB667C57E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{88757347-1CAD-4B53-8EAC-A4EFB667C57E}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{88757347-1CAD-4B53-8EAC-A4EFB667C57E}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{88757347-1CAD-4B53-8EAC-A4EFB667C57E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -38,7 +30,6 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{FC717074-F3ED-491E-92FB-4AE891B90993} = {0972311A-9A40-4E81-AC85-0DF311E8B4FD}
 		{6F2D95AA-9CF7-4453-9D36-E425DC5AB384} = {0972311A-9A40-4E81-AC85-0DF311E8B4FD}
-		{88757347-1CAD-4B53-8EAC-A4EFB667C57E} = {C0B14645-B036-4776-BB8D-26F5759BE3B8}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {2E3ED1FD-F51C-4BF4-BF36-5A8E4C3EB1BE}
