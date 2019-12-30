@@ -13,8 +13,6 @@ namespace API.BindingModels
         public string Name { get; set; }
         public string Description { get; set; }
         [Required]
-        public string CreatorId { get; set; }
-        [Required]
         public IList<RaceCheckpoint> RaceCheckpoints { get; set; }
     }
 }
