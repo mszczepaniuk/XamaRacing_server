@@ -8,11 +8,13 @@ using Microsoft.EntityFrameworkCore;
 using Infrastructure.Data;
 using Infrastructure.Data.Entities;
 using API.BindingModels;
+using Microsoft.AspNetCore.Authorization;
 
 namespace API.Controllers
 {
     [Route("v1/[controller]")]
     [ApiController]
+    [Authorize]
     public class RaceMapsController : ControllerBase
     {
         private readonly AppDbContext appDbContext;
@@ -74,6 +76,7 @@ namespace API.Controllers
         [HttpPut("{id}")]
         public async Task<ActionResult<RaceMap>> PutRaceMap(int id, RaceMapBindingModel raceMapBindingModel)
         {
+            if (!ModelState.IsValid) { return BadRequest(raceMapBindingModel); }
             var raceMap = await appDbContext.RaceMaps.Include(x => x.RaceCheckpoints)
                 .Where(x => x.Id == id)
                 .FirstOrDefaultAsync();
@@ -103,11 +106,13 @@ namespace API.Controllers
         [HttpPost]
         public async Task<ActionResult<RaceMap>> PostRaceMap(RaceMapBindingModel raceMapBindingModel)
         {
+            if (!ModelState.IsValid) { return BadRequest(raceMapBindingModel); }
             var createdDate = DateTime.Now;
             var raceMap = new RaceMap
             {
                 Name = raceMapBindingModel.Name,
                 Description = raceMapBindingModel.Description,
+                CreatorId = raceMapBindingModel.CreatorId,
                 RaceCheckpoints = raceMapBindingModel.RaceCheckpoints,
                 CreatedDate = createdDate,
                 UpdatedDate = createdDate

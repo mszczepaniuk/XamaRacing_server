@@ -8,11 +8,13 @@ using Microsoft.EntityFrameworkCore;
 using Infrastructure.Data;
 using Infrastructure.Data.Entities;
 using API.BindingModels;
+using Microsoft.AspNetCore.Authorization;
 
 namespace API.Controllers
 {
     [Route("v1/[controller]")]
     [ApiController]
+    [Authorize]
     public class RaceResultsController : ControllerBase
     {
         private readonly AppDbContext appDbContext;
@@ -28,10 +30,11 @@ namespace API.Controllers
         [HttpPost]
         public async Task<ActionResult<RaceResult>> PostRaceResult(RaceResultBindingModel raceResultBindingModel)
         {
+            if (!ModelState.IsValid) { return BadRequest(raceResultBindingModel); }
             var raceResult = new RaceResult
             {
                 RaceId = raceResultBindingModel.RaceId,
-                Nickname = raceResultBindingModel.Nickname,
+                UserId = raceResultBindingModel.UserId,
                 Time = raceResultBindingModel.Time,
                 CreatedDate = DateTime.Now
             };

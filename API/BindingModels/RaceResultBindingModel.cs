@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -7,8 +8,11 @@ namespace API.BindingModels
 {
     public class RaceResultBindingModel
     {
-        public string Nickname { get; set; }
+        [Required]
+        public string UserId { get; set; }
+        [Required]
         public int RaceId { get; set; }
+        [Required]
         public TimeSpan Time { get; set; }
     }
 }

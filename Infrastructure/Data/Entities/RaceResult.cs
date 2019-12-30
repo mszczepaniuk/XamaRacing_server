@@ -12,7 +12,8 @@ namespace Infrastructure.Data.Entities
         public int RaceId { get; set; }
         [JsonIgnore]
         public RaceMap Race { get; set; }
-        public string Nickname { get; set; }
+        public string UserId { get; set; }
+        public ApplicationUser User { get; set; }
         public TimeSpan Time { get; set; }
         public DateTime CreatedDate { get; set; }
     }

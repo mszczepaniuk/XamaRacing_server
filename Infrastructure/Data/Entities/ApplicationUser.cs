@@ -9,5 +9,7 @@ namespace Infrastructure.Data.Entities
     {
         public ICollection<RaceMap> CreatedMaps { get; set; }
         public ICollection<RaceResult> RaceResults { get; set; }
+        public DateTime CreatedDate { get; set; }
+        public DateTime UpdatedDate { get; set; }
     }
 }
