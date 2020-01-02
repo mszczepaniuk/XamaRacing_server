@@ -23,6 +23,16 @@ namespace Infrastructure.Data
         {
             base.OnModelCreating(modelBuilder);
             modelBuilder.Entity<RaceCheckpoint>().HasKey(x => new { x.RaceId, x.NumberInOrder });
+
+            modelBuilder.Entity<RaceMap>()
+                .HasOne(x => x.User)
+                .WithMany(x => x.CreatedMaps)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            modelBuilder.Entity<RaceResult>()
+                .HasOne(x => x.User)
+                .WithMany(x => x.RaceResults)
+                .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }

@@ -9,10 +9,8 @@ namespace API.BindingModels
     public class RaceResultBindingModel
     {
         [Required]
-        public string UserId { get; set; }
+        public int? RaceId { get; set; }
         [Required]
-        public int RaceId { get; set; }
-        [Required]
-        public TimeSpan Time { get; set; }
+        public string Time { get; set; }
     }
 }
