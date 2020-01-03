@@ -104,7 +104,7 @@ namespace API.Controllers
             }
         }
 
-        [HttpPost("RefreshToken")]
+        [HttpPost("RefreshAccessToken")]
         [AllowAnonymous]
         public async Task<IActionResult> RefreshAccessToken(RefreshTokenBindingModel model)
         {
