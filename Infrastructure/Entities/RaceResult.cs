@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Text;
 using System.Text.Json.Serialization;
 
-namespace Infrastructure.Data.Entities
+namespace Infrastructure.Entities
 {
     public class RaceResult
     {

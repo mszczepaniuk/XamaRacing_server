@@ -3,11 +3,12 @@ using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Security.Claims;
+using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using API.BindingModels;
 using Infrastructure.Data;
-using Infrastructure.Data.Entities;
+using Infrastructure.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
@@ -88,17 +89,61 @@ namespace API.Controllers
                     new Claim(JwtRegisteredClaimNames.Sub, user.Id),
                 };
                 var issuer = configuration.GetSection("JWTSettings").GetSection("Issuer").Value;
-                var token = new JwtSecurityToken(issuer: issuer,
+                var accessToken = new JwtSecurityToken(issuer: issuer,
                     claims: claims,
-                    expires: DateTime.Now.AddDays(1),
+                    expires: DateTime.Now.AddMinutes(2),
                     signingCredentials: signingCred);
-                return Ok(new { token = new JwtSecurityTokenHandler().WriteToken(token), userId = user.Id });
+
+                // TODO : Remove RefreshToken logic to new class.
+                // Consider ITokenService
+                var refreshToken = CreateRefreshToken(user.Id);
+                var currentRefreshToken = appDbContext.RefreshTokens.Where(x => x.UserId == user.Id).FirstOrDefault();
+                if (currentRefreshToken == null)
+                {
+                    appDbContext.Remove(currentRefreshToken);
+                    await appDbContext.SaveChangesAsync();
+                }
+                await appDbContext.AddAsync(refreshToken);
+                await appDbContext.SaveChangesAsync();
+
+                return Ok(new
+                {
+                    accessToken = new JwtSecurityTokenHandler().WriteToken(accessToken),
+                    refreshToken = refreshToken.Value,
+                    userId = user.Id
+                });
             }
             else
             {
                 return BadRequest(new { message = "Wrong password" });
             }
         }
+
+        //[HttpPost("RefreshToken")]
+        //[AllowAnonymous]
+        //public async Task<IActionResult> RefreshAccessToken(RefreshTokenBindingModel model)
+        //{
+        //    var handler = new JwtSecurityTokenHandler();
+        //    var tokenValidationParameters = new TokenValidationParameters
+        //    {
+        //        ValidIssuer = configuration.GetSection("JWTSettings").GetSection("Issuer").Value,
+        //        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration.GetSection("JWTSettings").GetSection("Secret").Value)),
+        //        ValidateAudience = false,
+        //        ValidateIssuer = true,
+        //        ValidateLifetime = false,
+        //        ClockSkew = TimeSpan.Zero
+        //    };
+        //    SecurityToken securityToken;
+        //    var principal = handler.ValidateToken(model.AccessToken, tokenValidationParameters, out securityToken);
+        //    var jwtSecurityToken = securityToken as JwtSecurityToken;
+
+        //    if (jwtSecurityToken == null || !jwtSecurityToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256, StringComparison.InvariantCultureIgnoreCase))
+        //    {
+        //        throw new SecurityTokenException("Invalid token!");
+        //    }
+
+        //    return Ok();
+        //}
 
         [HttpGet("{id}/RaceMaps")]
         public async Task<ActionResult<IEnumerable<RaceMap>>> GetUserMaps(string id, int? offset, int? count)
@@ -145,6 +190,25 @@ namespace API.Controllers
 
             await userManager.DeleteAsync(user);
             return Ok();
+        }
+
+        private RefreshToken CreateRefreshToken(string userId)
+        {
+            string value;
+            var randomNumber = new byte[32];
+            using (var rng = RandomNumberGenerator.Create())
+            {
+                rng.GetBytes(randomNumber);
+                value = Convert.ToBase64String(randomNumber);
+            }
+
+            var token = new RefreshToken
+            {
+                UserId = userId,
+                ExpirationDate = DateTime.Now.AddMonths(6),
+                Value = value
+            };
+            return token;
         }
     }
 }

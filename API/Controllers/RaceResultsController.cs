@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Infrastructure.Data;
-using Infrastructure.Data.Entities;
+using Infrastructure.Entities;
 using API.BindingModels;
 using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
