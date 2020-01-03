@@ -19,6 +19,8 @@ using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using Infrastructure.Services;
+using Infrastructure.Interfaces;
 
 namespace API
 {
@@ -35,7 +37,8 @@ namespace API
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddControllers();
-            services.AddDbContextPool<AppDbContext>(options => {
+            services.AddDbContextPool<AppDbContext>(options =>
+            {
                 options.UseSqlServer(Configuration.GetConnectionString("TestConnection"));
             });
 
@@ -46,11 +49,15 @@ namespace API
             })
                 .AddEntityFrameworkStores<AppDbContext>();
 
-            services.AddAuthentication(options => {
+            services.AddTransient<ITokenService, EfTokenService>();
+
+            services.AddAuthentication(options =>
+            {
                 options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
                 options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
             })
-                .AddJwtBearer(options => {
+                .AddJwtBearer(options =>
+                {
                     options.RequireHttpsMetadata = false;
                     options.SaveToken = true;
                     options.TokenValidationParameters = new TokenValidationParameters
@@ -80,10 +87,10 @@ namespace API
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
-            if (env.IsDevelopment())
-            {
-                app.UseDeveloperExceptionPage();
-            }
+            //if (env.IsDevelopment())
+            //{
+            //    app.UseDeveloperExceptionPage();
+            //}
 
             app.UseHttpsRedirection();
 

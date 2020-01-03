@@ -10,6 +10,7 @@ using Infrastructure.Entities;
 using API.BindingModels;
 using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
+using Infrastructure.Interfaces;
 
 namespace API.Controllers
 {
@@ -19,10 +20,13 @@ namespace API.Controllers
     public class RaceResultsController : ControllerBase
     {
         private readonly AppDbContext appDbContext;
+        private readonly ITokenService tokenService;
 
-        public RaceResultsController(AppDbContext appDbContext)
+        public RaceResultsController(AppDbContext appDbContext,
+            ITokenService tokenService)
         {
             this.appDbContext = appDbContext;
+            this.tokenService = tokenService;
         }
 
         // POST: v1/RaceResults
@@ -33,9 +37,7 @@ namespace API.Controllers
         {
             if (!ModelState.IsValid) { return BadRequest(raceResultBindingModel); }
 
-            var claimsIdentity = HttpContext.User.Identity as ClaimsIdentity;
-            // "sub" is mapped to "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier" automatically
-            var contextUserId = claimsIdentity.Claims.Where(x => x.Type == "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier").FirstOrDefault().Value;
+            var contextUserId = tokenService.GetUserId(HttpContext.User);
             if (contextUserId == null) { return BadRequest(new { message = "Couldnt determine user from context" }); }
 
             var race = await appDbContext.RaceMaps.FindAsync(raceResultBindingModel.RaceId.Value);
@@ -69,9 +71,7 @@ namespace API.Controllers
                 return NotFound();
             }
 
-            var claimsIdentity = HttpContext.User.Identity as ClaimsIdentity;
-            // "sub" is mapped to "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier" automatically
-            var contextUserId = claimsIdentity.Claims.Where(x => x.Type == "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier").FirstOrDefault().Value;
+            var contextUserId = tokenService.GetUserId(HttpContext.User);
             if (contextUserId == null) { return BadRequest(new { message = "Couldnt determine user from context" }); }
             if (contextUserId != raceResult.UserId) { return Unauthorized(); }
 

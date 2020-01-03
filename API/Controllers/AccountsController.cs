@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using API.BindingModels;
 using Infrastructure.Data;
 using Infrastructure.Entities;
+using Infrastructure.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
@@ -28,16 +29,19 @@ namespace API.Controllers
         private readonly SignInManager<ApplicationUser> signInManager;
         private readonly IConfiguration configuration;
         private readonly AppDbContext appDbContext;
+        private readonly ITokenService tokenService;
 
         public AccountsController(UserManager<ApplicationUser> userManager,
             SignInManager<ApplicationUser> signInManager,
             IConfiguration configuration,
-            AppDbContext appDbContext)
+            AppDbContext appDbContext,
+            ITokenService tokenService)
         {
             this.userManager = userManager;
             this.signInManager = signInManager;
             this.configuration = configuration;
             this.appDbContext = appDbContext;
+            this.tokenService = tokenService;
         }
 
         [HttpPost("Register")]
@@ -82,33 +86,14 @@ namespace API.Controllers
             var result = await signInManager.CheckPasswordSignInAsync(user, model.Password, false);
             if (result.Succeeded)
             {
-                var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration.GetSection("JWTSettings").GetSection("Secret").Value));
-                var signingCred = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-                var claims = new[]
-                {
-                    new Claim(JwtRegisteredClaimNames.Sub, user.Id),
-                };
-                var issuer = configuration.GetSection("JWTSettings").GetSection("Issuer").Value;
-                var accessToken = new JwtSecurityToken(issuer: issuer,
-                    claims: claims,
-                    expires: DateTime.Now.AddMinutes(2),
-                    signingCredentials: signingCred);
+                var accessToken = tokenService.CreateAccessToken(user.Id);
 
-                // TODO : Remove RefreshToken logic to new class.
-                // Consider ITokenService
-                var refreshToken = CreateRefreshToken(user.Id);
-                var currentRefreshToken = appDbContext.RefreshTokens.Where(x => x.UserId == user.Id).FirstOrDefault();
-                if (currentRefreshToken == null)
-                {
-                    appDbContext.Remove(currentRefreshToken);
-                    await appDbContext.SaveChangesAsync();
-                }
-                await appDbContext.AddAsync(refreshToken);
-                await appDbContext.SaveChangesAsync();
+                var refreshToken = tokenService.CreateRefreshToken(user.Id);
+                await tokenService.UpdateRefreshToken(user.Id, refreshToken);
 
                 return Ok(new
                 {
-                    accessToken = new JwtSecurityTokenHandler().WriteToken(accessToken),
+                    accessToken,
                     refreshToken = refreshToken.Value,
                     userId = user.Id
                 });
@@ -119,31 +104,16 @@ namespace API.Controllers
             }
         }
 
-        //[HttpPost("RefreshToken")]
-        //[AllowAnonymous]
-        //public async Task<IActionResult> RefreshAccessToken(RefreshTokenBindingModel model)
-        //{
-        //    var handler = new JwtSecurityTokenHandler();
-        //    var tokenValidationParameters = new TokenValidationParameters
-        //    {
-        //        ValidIssuer = configuration.GetSection("JWTSettings").GetSection("Issuer").Value,
-        //        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration.GetSection("JWTSettings").GetSection("Secret").Value)),
-        //        ValidateAudience = false,
-        //        ValidateIssuer = true,
-        //        ValidateLifetime = false,
-        //        ClockSkew = TimeSpan.Zero
-        //    };
-        //    SecurityToken securityToken;
-        //    var principal = handler.ValidateToken(model.AccessToken, tokenValidationParameters, out securityToken);
-        //    var jwtSecurityToken = securityToken as JwtSecurityToken;
+        [HttpPost("RefreshToken")]
+        [AllowAnonymous]
+        public async Task<IActionResult> RefreshAccessToken(RefreshTokenBindingModel model)
+        {
+            var tokenArray = tokenService.RenewTokens(model.AccessToken, model.RefreshToken).Result;
+            // TODO: Error message, get validation errors from RenewTokens().
+            if (tokenArray.Length != 2) { return BadRequest(); }
 
-        //    if (jwtSecurityToken == null || !jwtSecurityToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256, StringComparison.InvariantCultureIgnoreCase))
-        //    {
-        //        throw new SecurityTokenException("Invalid token!");
-        //    }
-
-        //    return Ok();
-        //}
+            return Ok(new { accessToken = tokenArray[0], refreshToken = tokenArray[1] });
+        }
 
         [HttpGet("{id}/RaceMaps")]
         public async Task<ActionResult<IEnumerable<RaceMap>>> GetUserMaps(string id, int? offset, int? count)
@@ -182,33 +152,12 @@ namespace API.Controllers
             var user = await userManager.FindByIdAsync(id);
             if (user == null) { return NotFound(new { message = "User wasn't found" }); }
 
-            var claimsIdentity = HttpContext.User.Identity as ClaimsIdentity;
-            // "sub" is mapped to "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier" automatically
-            var contextUserId = claimsIdentity.Claims.Where(x => x.Type == "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier").FirstOrDefault().Value;
+            var contextUserId = tokenService.GetUserId(HttpContext.User);
             if (contextUserId == null) { return BadRequest(new { message = "Couldnt determine user from context" }); }
             if (contextUserId != id) { return Unauthorized(); }
 
             await userManager.DeleteAsync(user);
             return Ok();
-        }
-
-        private RefreshToken CreateRefreshToken(string userId)
-        {
-            string value;
-            var randomNumber = new byte[32];
-            using (var rng = RandomNumberGenerator.Create())
-            {
-                rng.GetBytes(randomNumber);
-                value = Convert.ToBase64String(randomNumber);
-            }
-
-            var token = new RefreshToken
-            {
-                UserId = userId,
-                ExpirationDate = DateTime.Now.AddMonths(6),
-                Value = value
-            };
-            return token;
         }
     }
 }

@@ -11,6 +11,7 @@ using API.BindingModels;
 using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
 using System.IdentityModel.Tokens.Jwt;
+using Infrastructure.Interfaces;
 
 namespace API.Controllers
 {
@@ -20,10 +21,13 @@ namespace API.Controllers
     public class RaceMapsController : ControllerBase
     {
         private readonly AppDbContext appDbContext;
+        private readonly ITokenService tokenService;
 
-        public RaceMapsController(AppDbContext appDbContext)
+        public RaceMapsController(AppDbContext appDbContext,
+            ITokenService tokenService)
         {
             this.appDbContext = appDbContext;
+            this.tokenService = tokenService;
         }
 
         // TODO: Search by location
@@ -83,9 +87,7 @@ namespace API.Controllers
                 .FirstOrDefaultAsync();
             if (raceMap == null) { return NotFound(); }
 
-            var claimsIdentity = HttpContext.User.Identity as ClaimsIdentity;
-            // "sub" is mapped to "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier" automatically
-            var contextUserId = claimsIdentity.Claims.Where(x => x.Type == "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier").FirstOrDefault().Value;
+            var contextUserId = tokenService.GetUserId(HttpContext.User);
             if (contextUserId == null) { return BadRequest(new { message = "Couldnt determine user from context" }); }
             if (contextUserId != raceMap.UserId) { return Unauthorized(); }
 
@@ -114,9 +116,7 @@ namespace API.Controllers
             var test = TryValidateModel(raceMapBindingModel.RaceCheckpoints);
             if (!ModelState.IsValid) { return BadRequest(raceMapBindingModel); }
 
-            var claimsIdentity = HttpContext.User.Identity as ClaimsIdentity;
-            // "sub" is mapped to "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier" automatically
-            var contextUserId = claimsIdentity.Claims.Where(x => x.Type == "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier").FirstOrDefault().Value;
+            var contextUserId = tokenService.GetUserId(HttpContext.User);
             if (contextUserId == null) { return BadRequest(new { message = "Couldnt determine user from context" }); }
 
             var createdDate = DateTime.Now;
@@ -145,10 +145,7 @@ namespace API.Controllers
                 return NotFound();
             }
 
-            // TODO: Refactor authorization
-            var claimsIdentity = HttpContext.User.Identity as ClaimsIdentity;
-            // "sub" is mapped to "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier" automatically
-            var contextUserId = claimsIdentity.Claims.Where(x => x.Type == "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier").FirstOrDefault().Value;
+            var contextUserId = tokenService.GetUserId(HttpContext.User);
             if (contextUserId == null) { return BadRequest(new { message = "Couldnt determine user from context" }); }
             if (contextUserId != raceMap.UserId) { return Unauthorized(); }
 
@@ -156,31 +153,6 @@ namespace API.Controllers
             await appDbContext.SaveChangesAsync();
 
             return Ok();
-        }
-
-        private bool IsLocationValid(double[] location)
-        {
-            if (location.Length != 2 ||
-                location[0] > 90 ||
-                location[0] < -90 ||
-                location[1] > 180 ||
-                location[1] < -180)
-            {
-                return false;
-            }
-            return true;
-        }
-
-        private double DistanceBeetweenLocationAndRaceCheckpoint(RaceCheckpoint checkpoint, double[] location)
-        {
-            var latitudeDiff = checkpoint.Latitude - location[0];
-            var longitudeDiff = checkpoint.Longitude - location[1];
-            if (Math.Abs(longitudeDiff) > 180)
-            {
-                longitudeDiff = 360 - longitudeDiff;
-            }
-
-            return Math.Sqrt(Math.Pow(latitudeDiff, 2) + Math.Pow(longitudeDiff, 2));
         }
     }
 }
