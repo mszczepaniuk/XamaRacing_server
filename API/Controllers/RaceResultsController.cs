@@ -58,7 +58,7 @@ namespace API.Controllers
             appDbContext.RaceResults.Add(raceResult);
             await appDbContext.SaveChangesAsync();
 
-            return Ok(raceResult);
+            return CreatedAtAction("PostRaceResult", raceResult);
         }
 
         // DELETE: v1/RaceResults/5
