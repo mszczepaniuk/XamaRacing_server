@@ -130,14 +130,14 @@ namespace API.Controllers
             return raceMaps;
         }
 
-        [HttpGet("{userId}/RaceMaps/{raceId}/RaceResults")]
-        public async Task<ActionResult<IEnumerable<RaceResult>>> GetUserRaceResultsOnSpecificMap(string userId, int raceId, int? offset, int? count)
+        [HttpGet("{userId}/RaceMaps/{mapId}/RaceResults")]
+        public async Task<ActionResult<IEnumerable<RaceResult>>> GetUserRaceResultsOnSpecificMap(string userId, int mapId, int? offset, int? count)
         {
             offset ??= 0;
             if (count == null || count > 30) { count = 30; }
             var raceResults = await appDbContext.RaceResults
                 .OrderBy(x => x.Time)
-                .Where(x => x.RaceId == raceId)
+                .Where(x => x.RaceId == mapId)
                 .Where(x => x.UserId == userId)
                 .Skip(offset.Value)
                 .Take(count.Value)
