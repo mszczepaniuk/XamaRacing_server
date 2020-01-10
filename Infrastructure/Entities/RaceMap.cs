@@ -11,10 +11,12 @@ namespace Infrastructure.Entities
         public string Name { get; set; }
         public string Description { get; set; }
         public string UserId { get; set; }
+        [JsonIgnore]
         public ApplicationUser User { get; set; }
         public DateTime CreatedDate { get; set; }
         public DateTime UpdatedDate { get; set; }
         public IList<RaceCheckpoint> RaceCheckpoints { get; set; }
+        [JsonIgnore]
         public IList<RaceResult> RaceResults { get; set; }
     }
 }

@@ -48,7 +48,7 @@ namespace API.Controllers
 
         // GET: v1/RaceMaps/1/RaceResults
         [HttpGet("{id}/RaceResults")]
-        public async Task<ActionResult<IEnumerable<RaceResult>>> GetRaceMapsResults(int id, int? offset, int? count)
+        public async Task<ActionResult<IEnumerable<object>>> GetRaceMapsResults(int id, int? offset, int? count)
         {
             offset ??= 0;
             if (count == null || count > 30) { count = 30; }
@@ -56,6 +56,7 @@ namespace API.Controllers
                 .OrderBy(x => x.Time)
                 .Skip(offset.Value)
                 .Take(count.Value)
+                .Select(raceResult => new { raceResult, raceResult.User.UserName })
                 .ToArrayAsync();
             return raceResults;
         }
