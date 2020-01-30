@@ -26,21 +26,33 @@ namespace API
 {
     public class Startup
     {
-        public Startup(IConfiguration configuration)
+        private readonly IWebHostEnvironment env;
+        public IConfiguration Configuration { get; }
+
+        public Startup(IConfiguration configuration, IWebHostEnvironment env)
         {
             Configuration = configuration;
+            this.env = env;
         }
-
-        public IConfiguration Configuration { get; }
 
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddControllers();
-            services.AddDbContextPool<AppDbContext>(options =>
+            if (env.IsDevelopment())
             {
-                options.UseSqlServer(Configuration.GetConnectionString("TestConnection"));
-            });
+                services.AddDbContextPool<AppDbContext>(options =>
+                {
+                    options.UseSqlServer(Configuration.GetConnectionString("TestConnection"));
+                });
+            }
+            else
+            {
+                services.AddDbContextPool<AppDbContext>(options =>
+                {
+                    options.UseSqlServer(Configuration.GetConnectionString("AzureConnection"));
+                });
+            }
 
             services.AddIdentity<ApplicationUser, IdentityRole>(options =>
             {
@@ -85,12 +97,12 @@ namespace API
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        public void Configure(IApplicationBuilder app)
         {
-            //if (env.IsDevelopment())
-            //{
-            //    app.UseDeveloperExceptionPage();
-            //}
+            if (env.IsDevelopment())
+            {
+                app.UseDeveloperExceptionPage();
+            }
 
             app.UseHttpsRedirection();
 
